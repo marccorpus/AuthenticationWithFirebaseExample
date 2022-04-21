@@ -22,7 +22,6 @@ const AuthStack = () => {
         component={Login}
         options={{ title: "Login" }}
       />
-
       <Stack.Screen
         name="signup"
         component={Signup}
