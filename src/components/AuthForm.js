@@ -1,15 +1,21 @@
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useDispatch } from "react-redux";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import FormControl from "./FormControl";
 import Button from "./Button";
-import ErrorText from "./ErrorText";
+import Loading from "./Loading";
 
+import { login, signup } from "../api/auth";
+import { setToken } from "../store/slices/auth";
 import { validEmail, validPassword, confirmedData } from "../utils/validate";
 import colors from "../constants/colors";
 
 const AuthForm = ({ isSignup }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     emailAddress: "",
     confirmEmailAddress: "",
@@ -25,14 +31,10 @@ const AuthForm = ({ isSignup }) => {
   });
 
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+
   const buttonTitle = isSignup ? "Sign Up" : "Log In";
   const subButtonTitle = isSignup ? "Log in instead" : "Create a new user";
-
-  const hasError =
-    formError.emailAddress ||
-    formError.confirmEmailAddress ||
-    formError.password ||
-    formError.confirmPassword;
 
   const subButtonClickHandler = () => {
     let screen = "login";
@@ -50,7 +52,7 @@ const AuthForm = ({ isSignup }) => {
     setFormError((prevFormError) => ({ ...prevFormError, [key]: false }));
   };
 
-  const buttonClickHandler = () => {
+  const buttonClickHandler = async () => {
     const isEmailValid = validEmail(formData.emailAddress);
     const isConfirmEmailValid = isSignup
       ? validEmail(formData.confirmEmailAddress) &&
@@ -78,9 +80,34 @@ const AuthForm = ({ isSignup }) => {
       return;
     }
 
-    // TODO:
-    // Post request here
+    const { emailAddress: email, password } = formData;
+
+    setIsLoading(true);
+
+    try {
+      const token = isSignup
+        ? await signup({ email, password })
+        : await login({ email, password });
+
+      dispatch(setToken({ token }));
+
+      AsyncStorage.setItem("token", token);
+    } catch (error) {
+      let msg = "Invalid email address/password.";
+
+      if (isSignup) {
+        msg = error.response.data.error.message;
+      }
+
+      setIsLoading(false);
+
+      Alert.alert("Error", msg);
+    }
   };
+
+  if (isLoading) {
+    return <Loading size="large" color={colors.primary500} />;
+  }
 
   return (
     <View style={styles.container}>
@@ -126,10 +153,6 @@ const AuthForm = ({ isSignup }) => {
           }}
           isError={formError.confirmPassword}
         />
-      )}
-
-      {hasError && (
-        <ErrorText text="Invalid inputs. Please check your data and try again." />
       )}
 
       <Button

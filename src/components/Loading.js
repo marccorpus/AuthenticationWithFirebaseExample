@@ -1,14 +1,14 @@
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View, ActivityIndicator } from "react-native";
 
-const Home = () => {
+const Loading = ({ size, color }) => {
   return (
     <View style={styles.container}>
-      <Text>Welcome to Home Screen</Text>
+      <ActivityIndicator size={size} color={color} />
     </View>
   );
 };
 
-export default Home;
+export default Loading;
 
 const styles = StyleSheet.create({
   container: {

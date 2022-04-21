@@ -8,6 +8,7 @@ const FormControl = ({ label, textInputConfig, isError }) => {
       <Text style={[styles.label, isError && styles.labelError]}>{label}</Text>
       <TextInput
         style={[styles.textInput, isError && styles.textInputError]}
+        autoCapitalize="none"
         {...textInputConfig}
       />
     </View>
